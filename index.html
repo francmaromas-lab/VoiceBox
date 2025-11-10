@@ -5,26 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VoiceBox | Anonymous Feedback Portal</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Classic Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js"></script>
   <script src="script.js" defer></script>
 </head>
 <body>
   <header>
-    <div class="header-container">
-      <h1>🎤 VoiceBox</h1>
-      <p>Anonymous Student Feedback Portal</p>
-    </div>
+    <h1>🎤 VoiceBox</h1>
+    <p>Anonymous Student Feedback Portal</p>
   </header>
 
   <main>
     <div class="container">
+      <!-- Tabs -->
       <div class="tabs">
         <button class="tab-btn active" data-tab="submit">Send Feedback</button>
         <button class="tab-btn" data-tab="admin">Admin Dashboard</button>
       </div>
 
+      <!-- Feedback Form -->
       <section id="submit" class="tab-content active">
         <div class="card">
           <h2>Submit Feedback</h2>
@@ -40,7 +37,7 @@
             </select>
 
             <label>Message</label>
-            <textarea id="message" rows="4" placeholder="Write your feedback here..." required></textarea>
+            <textarea id="message" rows="4" placeholder="Write your feedback..." required></textarea>
 
             <label>Alias (optional)</label>
             <input id="alias" type="text" placeholder="Leave blank to stay anonymous" />
@@ -51,11 +48,13 @@
         </div>
       </section>
 
+      <!-- Admin Dashboard -->
       <section id="admin" class="tab-content">
         <div class="card">
           <h2>📊 Admin Dashboard</h2>
           <button id="loadFeedback">Load Feedback</button>
           <ul id="feedbackList" class="feedback-list"></ul>
+          <button id="clearFeedback" class="clear-btn">Clear All Feedback</button>
         </div>
       </section>
     </div>
