@@ -1,13 +1,3 @@
-// Import Firebase SDK via CDN
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  serverTimestamp,
-} from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
 // 🔥 Replace with your Firebase config
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
@@ -18,8 +8,9 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID",
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 // Tabs
 const tabButtons = document.querySelectorAll(".tab-btn");
@@ -50,11 +41,11 @@ form.addEventListener("submit", async (e) => {
   }
 
   try {
-    await addDoc(collection(db, "feedback"), {
+    await db.collection("feedback").add({
       category,
       message,
       alias,
-      createdAt: serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     status.textContent = "✅ Feedback sent successfully!";
     form.reset();
@@ -70,16 +61,20 @@ const list = document.getElementById("feedbackList");
 
 loadBtn.addEventListener("click", async () => {
   list.innerHTML = "<li>Loading...</li>";
-  const snap = await getDocs(collection(db, "feedback"));
-  list.innerHTML = "";
-  snap.forEach((doc) => {
-    const data = doc.data();
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <p><strong>${data.category}</strong></p>
-      <p>${data.message}</p>
-      <p><em>From: ${data.alias}</em></p>
-    `;
-    list.appendChild(li);
-  });
+  try {
+    const snapshot = await db.collection("feedback").orderBy("createdAt", "desc").get();
+    list.innerHTML = "";
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <p><strong>${data.category}</strong></p>
+        <p>${data.message}</p>
+        <p><em>From: ${data.alias}</em></p>
+      `;
+      list.appendChild(li);
+    });
+  } catch (err) {
+    list.innerHTML = "<li>❌ Failed to load feedback.</li>";
+  }
 });
