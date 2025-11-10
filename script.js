@@ -1,17 +1,3 @@
-// 🔥 Replace with your Firebase config
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
 // Tabs
 const tabButtons = document.querySelectorAll(".tab-btn");
 const tabContents = document.querySelectorAll(".tab-content");
@@ -25,11 +11,14 @@ tabButtons.forEach(btn => {
   });
 });
 
-// Submit feedback
+// LocalStorage feedback
 const form = document.getElementById("feedbackForm");
 const status = document.getElementById("status");
+const feedbackList = document.getElementById("feedbackList");
+const loadBtn = document.getElementById("loadFeedback");
+const clearBtn = document.getElementById("clearFeedback");
 
-form.addEventListener("submit", async (e) => {
+form.addEventListener("submit", e => {
   e.preventDefault();
   const category = document.getElementById("category").value;
   const message = document.getElementById("message").value.trim();
@@ -40,41 +29,43 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  try {
-    await db.collection("feedback").add({
-      category,
-      message,
-      alias,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-    status.textContent = "✅ Feedback sent successfully!";
-    form.reset();
-  } catch (err) {
-    console.error(err);
-    status.textContent = "❌ Error sending feedback.";
-  }
+  // Save to localStorage
+  const feedback = JSON.parse(localStorage.getItem("voicebox_feedback") || "[]");
+  feedback.unshift({
+    category,
+    message,
+    alias,
+    time: new Date().toLocaleString()
+  });
+  localStorage.setItem("voicebox_feedback", JSON.stringify(feedback));
+
+  status.textContent = "✅ Feedback sent!";
+  form.reset();
 });
 
-// Admin view
-const loadBtn = document.getElementById("loadFeedback");
-const list = document.getElementById("feedbackList");
+// Load admin feedback
+loadBtn.addEventListener("click", () => {
+  const feedback = JSON.parse(localStorage.getItem("voicebox_feedback") || "[]");
+  feedbackList.innerHTML = "";
+  if (feedback.length === 0) {
+    feedbackList.innerHTML = "<li>No feedback yet.</li>";
+    return;
+  }
+  feedback.forEach(f => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <p><strong>${f.category}</strong> <em>(${f.time})</em></p>
+      <p>${f.message}</p>
+      <p><em>From: ${f.alias}</em></p>
+    `;
+    feedbackList.appendChild(li);
+  });
+});
 
-loadBtn.addEventListener("click", async () => {
-  list.innerHTML = "<li>Loading...</li>";
-  try {
-    const snapshot = await db.collection("feedback").orderBy("createdAt", "desc").get();
-    list.innerHTML = "";
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <p><strong>${data.category}</strong></p>
-        <p>${data.message}</p>
-        <p><em>From: ${data.alias}</em></p>
-      `;
-      list.appendChild(li);
-    });
-  } catch (err) {
-    list.innerHTML = "<li>❌ Failed to load feedback.</li>";
+// Clear all feedback
+clearBtn.addEventListener("click", () => {
+  if (confirm("Are you sure you want to delete all feedback?")) {
+    localStorage.removeItem("voicebox_feedback");
+    feedbackList.innerHTML = "";
   }
 });
